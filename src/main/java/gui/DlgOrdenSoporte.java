@@ -6,6 +6,8 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 import javax.persistence.EntityManager;
@@ -354,11 +356,55 @@ public class DlgOrdenSoporte extends JDialog implements ActionListener {
 	}
 
 	void consultar() {
-
+		
+		Integer nroOrden = Integer.parseInt(txtNroOrdenSoporte.getText());
+		EntityManager manager = JPAUtil.getEntityManager();
+		
+		try {
+			OrdenSoporte ordenSoporte = manager.find(OrdenSoporte.class, nroOrden);
+			
+			if (ordenSoporte == null) {
+				mensajeAdvertencia("Orden de soporte no encontrada");
+				return;
+			}
+			
+			txtDetalleIncidencia.setText(ordenSoporte.getDetalleIncidencia());
+			cboTecnicos.setSelectedItem(ordenSoporte.getTecnico());
+			cboClientes.setSelectedItem(ordenSoporte.getCliente());
+			txtMonto.setText(ordenSoporte.getMonto()+"");
+			txtFechaRegistro.setText(ordenSoporte.getFechaRegistro()+"");
+		} finally {
+			manager.close();
+		}
+		
 	}
 
 	void modificar() {
-
+		Integer nroOrden = Integer.parseInt(txtNroOrdenSoporte.getText());
+		String detalleIncidencia = txtDetalleIncidencia.getText();
+		Tecnico tecnico = (Tecnico) cboTecnicos.getSelectedItem();
+		Cliente cliente = (Cliente) cboClientes.getSelectedItem();
+		Double monto = Double.parseDouble(txtMonto.getText());
+		//LocalDate fechaRegistro = LocalDate.parse(detalleIncidencia) 
+		
+		EntityManager manager = JPAUtil.getEntityManager();
+		
+		try {
+			OrdenSoporte ordenSoporte = new OrdenSoporte(nroOrden, null, tecnico, cliente, monto, detalleIncidencia);
+			
+			manager.getTransaction().begin();
+			manager.merge(ordenSoporte);
+			manager.getTransaction().commit();
+			
+			mensajeInfo("Orden de soporte actualizada");
+			limpiar();
+			
+		} catch (Exception e) {
+			mensajeError("Hubo un error en la transacción");
+			e.printStackTrace();
+		} finally {
+			manager.close();
+		}
 	}
 
 	void eliminar() {
