@@ -373,6 +373,8 @@ public class DlgOrdenSoporte extends JDialog implements ActionListener {
 			cboClientes.setSelectedItem(ordenSoporte.getCliente());
 			txtMonto.setText(ordenSoporte.getMonto()+"");
 			txtFechaRegistro.setText(ordenSoporte.getFechaRegistro()+"");
+			
+			habilitarOk();
 		} finally {
 			manager.close();
 		}
@@ -385,12 +387,12 @@ public class DlgOrdenSoporte extends JDialog implements ActionListener {
 		Tecnico tecnico = (Tecnico) cboTecnicos.getSelectedItem();
 		Cliente cliente = (Cliente) cboClientes.getSelectedItem();
 		Double monto = Double.parseDouble(txtMonto.getText());
-		//LocalDate fechaRegistro = LocalDate.parse(detalleIncidencia) 
+		LocalDate fechaRegistro = LocalDate.parse(txtFechaRegistro.getText()); 
 		
 		EntityManager manager = JPAUtil.getEntityManager();
 		
 		try {
-			OrdenSoporte ordenSoporte = new OrdenSoporte(nroOrden, null, tecnico, cliente, monto, detalleIncidencia);
+			OrdenSoporte ordenSoporte = new OrdenSoporte(nroOrden, fechaRegistro, tecnico, cliente, monto, detalleIncidencia);
 			
 			manager.getTransaction().begin();
 			manager.merge(ordenSoporte);
@@ -408,7 +410,29 @@ public class DlgOrdenSoporte extends JDialog implements ActionListener {
 	}
 
 	void eliminar() {
-
+		Integer nroOrden = Integer.parseInt(txtNroOrdenSoporte.getText());
+		EntityManager manager = JPAUtil.getEntityManager();
+		
+		try {
+			OrdenSoporte ordenSoporte = manager.find(OrdenSoporte.class, nroOrden);
+			
+			if (ordenSoporte == null) {
+				mensajeAdvertencia("Orden de soporte no encontrada");
+				return;
+			}
+			
+			manager.getTransaction().begin();
+			manager.remove(ordenSoporte);
+			manager.getTransaction().commit();
+			
+			mensajeInfo("Orden de soporte eliminada");
+			limpiar();
+		} catch (Exception e) {
+			mensajeError("Hubo un error en la transacción");
+			e.printStackTrace();
+		} finally {
+			manager.close();
+		}
 	}
 
 	// M�todos tipo void (con par�metros)
